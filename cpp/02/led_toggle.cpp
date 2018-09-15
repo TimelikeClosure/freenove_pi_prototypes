@@ -17,20 +17,35 @@ int main(void){
 
 	bool lastRead = 0,
 	     currentRead,
+	     isUnstable = 0,
+	     lastStableRead,
 	     ledStatus = 0;
+	long lastChange = 0,
+	     debounceDelay = 50;
 
 	while(1){
 		currentRead = digitalRead(buttonPin);
-		if (currentRead != lastRead && currentRead == 0){
-			ledStatus = !ledStatus;
-			if (ledStatus){
-				digitalWrite(ledPin, HIGH);
-				std::cout << "led ON" << std::endl;
-			} else {
-				digitalWrite(ledPin, LOW);
-				std::cout << "led OFF" << std::endl;
+		if (currentRead != lastRead){
+			lastChange = millis();
+			isUnstable = 1;
+		}
+		if (isUnstable){
+			if (millis() >= lastChange + debounceDelay){
+				isUnstable = 0;
+				if (currentRead != lastStableRead){
+					lastStableRead = currentRead;
+					if (currentRead == LOW){
+						ledStatus = !ledStatus;
+						if (ledStatus){
+							digitalWrite(ledPin, HIGH);
+							std::cout << "led ON" << std::endl;
+						} else {
+							digitalWrite(ledPin, LOW);
+							std::cout << "led OFF" << std::endl;
+						}
+					}
+				}
 			}
-			delay(50);
 		}
 		lastRead = currentRead;
 	}
